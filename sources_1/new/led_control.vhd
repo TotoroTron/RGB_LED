@@ -1,14 +1,15 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
+use work.parameters.all;
 
 entity led_control is
     Port(
-        clk_in : in std_logic; --internal clock         
-        rgb1, rgb2 : out std_logic_vector(2 downto 0);  
-        sel : out std_logic_vector(3 downto 0);         
+        clk_in : in std_logic; --internal clock
+        rgb1, rgb2 : out std_logic_vector(2 downto 0);
+        sel : out std_logic_vector(3 downto 0);  
         lat : out std_logic;                            
-        oe : out std_logic;                            
+        oe : out std_logic;
         clk_out : out std_logic; --clock to LED display
         reset : in std_logic;
         start : in std_logic;
@@ -25,6 +26,7 @@ architecture behavioral of led_control is
     signal next_rgb1, next_rgb2 : std_logic_vector(2 downto 0);
     signal duty, next_duty : integer range 0 to 255;
     signal rep_count, next_rep_count : integer range 0 to 20; --frame repeat
+    signal phase, next_phase : COLOR_TRANSITIONS;
 --    type ROM_TYPE is array (1535 downto 0) of std_logic_vector(23 downto 0);
 --    signal rom_upper : ROM_TYPE;
 --    signal rom_lower : ROM_TYPE;
@@ -61,6 +63,7 @@ begin
             duty <= 0;
             rep_count <= 0;
             di <= X"FF0000";
+            phase <= RED_MAGENTA;
 --            phase1 := RED_MAGENTA;
 --            phase2 := RED_MAGENTA;
         elsif(running = '1') then
@@ -72,6 +75,7 @@ begin
             sel <= std_logic_vector(to_unsigned(next_sect, 4));
             duty <= next_duty;
             rep_count <= next_rep_count;
+            phase <= next_phase;
             di <= next_di;
         end if;
     end if;
@@ -79,7 +83,6 @@ end process;
 STATE_MACHINE : process(state, col ,sect, duty, di, rep_count)
     variable v_rgb1, v_rgb2 : std_logic_vector(2 downto 0);
     variable r_count, g_count, b_count : integer range 0 to 255;
-    variable phase : COLOR_TRANSITIONS;
 begin
     next_state <= state;
     next_di <= di;
@@ -87,6 +90,7 @@ begin
     next_sect <= sect;
     next_duty <= duty;
     next_rep_count <= rep_count;
+    next_phase <= phase;
     r_count := to_integer( unsigned( di(23 downto 16) )); --255
     g_count := to_integer( unsigned( di(15 downto  8) )); --0
     b_count := to_integer( unsigned( di( 7 downto  0) )); --0
@@ -101,9 +105,9 @@ begin
         next_state <= GET_DATA;
     when GET_DATA =>
         oe <= '0';
-        if(duty < r_count ) then v_rgb1(0) := '1'; v_rgb2(0) := '1'; end if;
-        if(duty < g_count ) then v_rgb1(1) := '1'; v_rgb2(1) := '1'; end if;
-        if(duty < b_count ) then v_rgb1(2) := '1'; v_rgb2(2) := '1'; end if;
+        if(duty < gamma(r_count) ) then v_rgb1(0) := '1'; v_rgb2(0) := '1'; end if;
+        if(duty < gamma(g_count) ) then v_rgb1(1) := '1'; v_rgb2(1) := '1'; end if;
+        if(duty < gamma(b_count) ) then v_rgb1(2) := '1'; v_rgb2(2) := '1'; end if;
         next_state <= NEXT_COLUMN;
     when NEXT_COLUMN =>
         oe <= '0';
@@ -136,28 +140,28 @@ begin
             else
                 next_rep_count <= 0;
                 next_state <= ANIMATE;
-            end if;            
+            end if;
         end if;
     when ANIMATE => 
         case phase is
             when RED_MAGENTA =>
                 if(b_count < 255) then b_count := b_count + 1;
-                else phase := MAGENTA_BLUE; end if;
+                else next_phase <= MAGENTA_BLUE; end if;
             when MAGENTA_BLUE =>
                 if(r_count >   0) then r_count := r_count - 1;
-                else phase := BLUE_CYAN; end if;
+                else next_phase <= BLUE_CYAN; end if;
             when BLUE_CYAN =>
                 if(g_count < 255) then g_count := g_count + 1;
-                else phase := CYAN_GREEN; end if;
+                else next_phase <= CYAN_GREEN; end if;
             when CYAN_GREEN =>
                 if(b_count >   0) then b_count := b_count - 1;
-                else phase := GREEN_YELLOW; end if;
+                else next_phase <= GREEN_YELLOW; end if;
             when GREEN_YELLOW =>
                 if(r_count < 255) then r_count := r_count + 1;
-                else phase := YELLOW_RED; end if;                
+                else next_phase <= YELLOW_RED; end if;                
             when YELLOW_RED =>
                 if(g_count >   0) then g_count := g_count - 1;
-                else phase := RED_MAGENTA; end if;
+                else next_phase <= RED_MAGENTA; end if;
         end case;
         next_state <= GET_DATA;
     end case;
