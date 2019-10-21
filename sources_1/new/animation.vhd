@@ -34,6 +34,9 @@ begin
             g_count <= next_g;
             b_count <= next_b;
             phase <= next_phase;
+            do <= std_logic_vector(to_unsigned(next_r, 8)) &
+                std_logic_vector(to_unsigned(next_g, 8)) &
+                std_logic_vector(to_unsigned(next_b, 8));
         end if;
     end if;
 end process;
@@ -65,11 +68,8 @@ begin
             if(g_count >   0) then next_g <= g_count - 1;
             else next_phase <= RED_MAGENTA; end if;
         end case;
-        do <= std_logic_vector(to_unsigned(r_count, 8)) &
-            std_logic_vector(to_unsigned(g_count, 8)) &
-            std_logic_vector(to_unsigned(b_count, 8));
+
     end if;
 end process;
-
 
 end architecture;
