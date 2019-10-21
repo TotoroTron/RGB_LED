@@ -10,6 +10,7 @@ entity led_control is
         start : in std_logic;
         di : in std_logic_vector(23 downto 0) := X"FF0000";
         
+        frame_req : out std_logic;
         rgb1, rgb2 : out std_logic_vector(2 downto 0);
         sel : out std_logic_vector(3 downto 0);  
         lat : out std_logic;                            
@@ -61,6 +62,7 @@ STATE_MACHINE : process(state, col ,sect, duty, di, rep_count)
     variable v_rgb1, v_rgb2 : std_logic_vector(2 downto 0);
     variable r_count, g_count, b_count : integer range 0 to 255;
 begin
+    frame_req <= '0';
     next_state <= state;
     next_di <= di;
     next_col <= col;
@@ -115,30 +117,31 @@ begin
                 next_rep_count <= rep_count + 1;
                 next_state <= GET_DATA;
             else
+                frame_req <= '1';
                 next_rep_count <= 0;
                 next_state <= ANIMATE;
             end if;
         end if;
     when ANIMATE => 
         case phase is
-            when RED_MAGENTA =>
-                if(b_count < 255) then b_count := b_count + 1;
-                else next_phase <= MAGENTA_BLUE; end if;
-            when MAGENTA_BLUE =>
-                if(r_count >   0) then r_count := r_count - 1;
-                else next_phase <= BLUE_CYAN; end if;
-            when BLUE_CYAN =>
-                if(g_count < 255) then g_count := g_count + 1;
-                else next_phase <= CYAN_GREEN; end if;
-            when CYAN_GREEN =>
-                if(b_count >   0) then b_count := b_count - 1;
-                else next_phase <= GREEN_YELLOW; end if;
-            when GREEN_YELLOW =>
-                if(r_count < 255) then r_count := r_count + 1;
-                else next_phase <= YELLOW_RED; end if;                
-            when YELLOW_RED =>
-                if(g_count >   0) then g_count := g_count - 1;
-                else next_phase <= RED_MAGENTA; end if;
+        when RED_MAGENTA =>
+            if(b_count < 255) then b_count := b_count + 1;
+            else next_phase <= MAGENTA_BLUE; end if;
+        when MAGENTA_BLUE =>
+            if(r_count >   0) then r_count := r_count - 1;
+            else next_phase <= BLUE_CYAN; end if;
+        when BLUE_CYAN =>
+            if(g_count < 255) then g_count := g_count + 1;
+            else next_phase <= CYAN_GREEN; end if;
+        when CYAN_GREEN =>
+            if(b_count >   0) then b_count := b_count - 1;
+            else next_phase <= GREEN_YELLOW; end if;
+        when GREEN_YELLOW =>
+            if(r_count < 255) then r_count := r_count + 1;
+            else next_phase <= YELLOW_RED; end if;                
+        when YELLOW_RED =>
+            if(g_count >   0) then g_count := g_count - 1;
+            else next_phase <= RED_MAGENTA; end if;
         end case;
         next_state <= GET_DATA;
     end case;

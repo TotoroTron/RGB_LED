@@ -5,7 +5,7 @@ use IEEE.NUMERIC_STD.ALL;
 entity top_level is
     generic(
         mode : string := "colorcycle";
-        --available modes: colorcycle, rainbowswipe, gif
+        --available modes: colorcycle, rainbowswipe, gifplayer
         delay : integer := 6
     );
     port(
@@ -46,6 +46,7 @@ begin
     LED_CONTROL: entity work.led_control
     port map(
         clk2 => clk2,
+        frame_req => frame_req,
         rgb1 => rgb1,
         rgb2 => rgb2,
         sel => sel,
@@ -56,8 +57,8 @@ begin
         start => start,
         di => data
     );
-    
-    ANIMATIONS: entity work.animation
+    ANIMATION_SELECT: if mode = "colorcycle" generate
+    COLORCYCLE: entity work.animation
     port map(
         clk2 => clk2,
         start => start,
@@ -65,5 +66,5 @@ begin
         frame_req => frame_req,
         do => data
     );
-
+    end generate ANIMATION_SELECT;
 end Behavioral;
