@@ -23,6 +23,9 @@ package parameters is
         177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
         215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255
     );
-
+    
+    type ROM_TYPE is array (1535 downto 0) of std_logic_vector(23 downto 0);
+    signal rom_upper : ROM_TYPE;
+    signal rom_lower : ROM_TYPE;
 
 end package;

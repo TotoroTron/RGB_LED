@@ -5,15 +5,16 @@ use work.parameters.all;
 
 entity led_control is
     Port(
-        clk_in : in std_logic; --internal clock
+        clk2 : in std_logic; --internal clock
+        reset : in std_logic;
+        start : in std_logic;
+        di : in std_logic_vector(23 downto 0) := X"FF0000";
+        
         rgb1, rgb2 : out std_logic_vector(2 downto 0);
         sel : out std_logic_vector(3 downto 0);  
         lat : out std_logic;                            
         oe : out std_logic;
-        clk_out : out std_logic; --clock to LED display
-        reset : in std_logic;
-        start : in std_logic;
-        gnd : out std_logic_vector(2 downto 0) := "000"
+        clk_out : out std_logic --clock to LED display
     );
 end entity;
 
@@ -27,30 +28,10 @@ architecture behavioral of led_control is
     signal duty, next_duty : integer range 0 to 255;
     signal rep_count, next_rep_count : integer range 0 to 20; --frame repeat
     signal phase, next_phase : COLOR_TRANSITIONS;
---    type ROM_TYPE is array (1535 downto 0) of std_logic_vector(23 downto 0);
---    signal rom_upper : ROM_TYPE;
---    signal rom_lower : ROM_TYPE;
-    signal di : std_logic_vector(23 downto 0) := X"FF0000";   --move to entity ports in future
     signal next_di : std_logic_vector(23 downto 0);
-    constant delay : integer := 6;
     constant frame_reps : integer := 0;
-    signal clk2 : std_logic;
 begin
-CLOCK_DIV : process(clk_in)
-    variable count : integer range 0 to delay;
-begin
-    if rising_edge(clk_in) then
-        if count < delay/2 then
-            clk2 <= '0';
-            count := count + 1;
-        elsif count < delay then
-            clk2 <= '1';
-            count := count + 1;
-        else
-            count := 0;
-        end if;
-    end if;
-end process;
+
 STATE_REGISTER : process(clk2, start, reset)
     variable running : std_logic := '0';
 begin
@@ -62,10 +43,7 @@ begin
             sect <= 0;
             duty <= 0;
             rep_count <= 0;
-            di <= X"FF0000";
             phase <= RED_MAGENTA;
---            phase1 := RED_MAGENTA;
---            phase2 := RED_MAGENTA;
         elsif(running = '1') then
             state <= next_state;
             rgb1 <= next_rgb1;
@@ -76,7 +54,6 @@ begin
             duty <= next_duty;
             rep_count <= next_rep_count;
             phase <= next_phase;
-            di <= next_di;
         end if;
     end if;
 end process;
