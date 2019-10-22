@@ -8,7 +8,9 @@ entity led_control is
         clk2 : in std_logic; --internal clock
         reset : in std_logic;
         start : in std_logic;
-        di : in std_logic_vector(23 downto 0) := X"FF0000";
+        di1 : in std_logic_vector(23 downto 0);
+        di2 : in std_logic_vector(23 downto 0);
+        addr : out std_logic_vector(8 downto 0);
         
         frame_req : out std_logic;
         rgb1, rgb2 : out std_logic_vector(2 downto 0);
@@ -27,22 +29,23 @@ architecture behavioral of led_control is
     signal next_rgb1, next_rgb2 : std_logic_vector(2 downto 0);
     signal duty, next_duty : integer range 0 to 255;
     signal rep_count, next_rep_count : integer range 0 to 20; --frame repeat
-    signal next_di : std_logic_vector(23 downto 0);
+    signal s_addr, next_addr : std_logic_vector(8 downto 0);
     constant frame_reps : integer := 0;
 begin
 
 STATE_REGISTER : process(clk2, start, reset)
-    variable running : std_logic := '0';
+    variable running : boolean := false;
 begin
     if rising_edge(clk2) then
-        if start = '1' then running := '1'; end if;
+        if start = '1' then running := true; end if;
         if(reset = '1') then
             state <= INIT;
             col <= 0;
             sect <= 0;
             duty <= 0;
             rep_count <= 0;
-        elsif(running = '1') then
+            s_addr <= (others => '0');
+        elsif(running = true) then
             state <= next_state;
             rgb1 <= next_rgb1;
             rgb2 <= next_rgb2;
@@ -51,41 +54,54 @@ begin
             sel <= std_logic_vector(to_unsigned(next_sect, 4));
             duty <= next_duty;
             rep_count <= next_rep_count;
+            s_addr <= next_addr;
         end if;
     end if;
 end process;
-STATE_MACHINE : process(state, col ,sect, duty, di, rep_count)
+
+STATE_MACHINE : process(state, col ,sect, duty, di1, di2, rep_count)
     variable v_rgb1, v_rgb2 : std_logic_vector(2 downto 0);
-    variable r_count, g_count, b_count : integer range 0 to 255;
+    variable r_count1, g_count1, b_count1 : integer range 0 to 255;
+    variable r_count2, g_count2, b_count2 : integer range 0 to 255;
 begin
+    addr <= s_addr;
     frame_req <= '0';
     next_state <= state;
-    next_di <= di;
     next_col <= col;
     next_sect <= sect;
     next_duty <= duty;
     next_rep_count <= rep_count;
-    r_count := to_integer( unsigned( di(23 downto 16) )); --255
-    g_count := to_integer( unsigned( di(15 downto  8) )); --0
-    b_count := to_integer( unsigned( di( 7 downto  0) )); --0
+    r_count1 := to_integer( unsigned( di1(23 downto 16) )); --255
+    g_count1 := to_integer( unsigned( di1(15 downto  8) )); --0
+    b_count1 := to_integer( unsigned( di1( 7 downto  0) )); --0
+    r_count2 := to_integer( unsigned( di2(23 downto 16) )); --255
+    g_count2 := to_integer( unsigned( di2(15 downto  8) )); --0
+    b_count2 := to_integer( unsigned( di2( 7 downto  0) )); --0
     v_rgb1 := "000"; 
     v_rgb2 := "000";
     clk_out <= '0';
     lat <= '0';
     oe <= '1';
-    
     case state is
     when INIT =>
         next_state <= GET_DATA;
     when GET_DATA =>
         oe <= '0';
-        if(duty < gamma(r_count) ) then v_rgb1(0) := '1'; v_rgb2(0) := '1'; end if;
-        if(duty < gamma(g_count) ) then v_rgb1(1) := '1'; v_rgb2(1) := '1'; end if;
-        if(duty < gamma(b_count) ) then v_rgb1(2) := '1'; v_rgb2(2) := '1'; end if;
+        if(duty < gamma(r_count1) ) then v_rgb1(0) := '1'; end if;
+        if(duty < gamma(g_count1) ) then v_rgb1(1) := '1'; end if;
+        if(duty < gamma(b_count1) ) then v_rgb1(2) := '1'; end if;
+        if(duty < gamma(r_count2) ) then v_rgb2(0) := '1'; end if;
+        if(duty < gamma(g_count2) ) then v_rgb2(1) := '1'; end if;
+        if(duty < gamma(b_count2) ) then v_rgb2(2) := '1'; end if;        
         next_state <= NEXT_COLUMN;
     when NEXT_COLUMN =>
         oe <= '0';
         clk_out <= '1';
+        if( to_integer( unsigned (s_addr)) < 511) then
+            next_addr <= std_logic_vector(unsigned(s_addr) + 1);
+        else
+            next_addr <= (others => '0');
+        end if;
         if(col < 31) then
             next_col <= col + 1;
             next_state <= GET_DATA;
@@ -116,9 +132,7 @@ begin
         end if;
         next_state <= GET_DATA;
     end case;
-    
     next_rgb1 <= v_rgb1;
     next_rgb2 <= v_rgb2;
-    
 end process;
 end architecture;

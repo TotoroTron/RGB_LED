@@ -4,7 +4,6 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity top_level is
     generic(
-        mode : string := "colorcycle";
         --available modes: colorcycle, rainbowswipe, gifplayer
         delay : integer := 6
     );
@@ -23,9 +22,10 @@ entity top_level is
 end top_level;
 
 architecture Behavioral of top_level is
-    signal data : std_logic_vector(23 downto 0);
+    signal data : std_logic_vector(47 downto 0); --MSB: lower half, LSB: upper half
     signal clk2 : std_logic;
     signal frame_req : std_logic;
+    signal addr : std_logic_vector(8 downto 0);
 begin
     CLOCK_DIV : process(clk_in)
         variable count : integer range 0 to delay;
@@ -55,16 +55,20 @@ begin
         clk_out => clk_out,
         reset => reset,
         start => start,
-        di => data
+        di1 => data(23 downto 0),
+        di2 => data(47 downto 24),
+        addr => addr
     );
-    ANIMATION_SELECT: if mode = "colorcycle" generate
-    COLORCYCLE: entity work.animation
+    
+    ANIMATION: entity work.animation
+    generic map(
+        mode => "colorcycle"
+    )
     port map(
-        clk2 => clk2,
         start => start,
         reset => reset,
         frame_req => frame_req,
-        do => data
+        do1 => data(23 downto 0),
+        do2 => data(47 downto 24)
     );
-    end generate ANIMATION_SELECT;
 end Behavioral;
