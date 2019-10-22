@@ -3,9 +3,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 entity animation is
-    generic(
-        mode : string
-    );
+    generic( mode : string );
     port(
         start, reset : in std_logic;
         frame_req : in std_logic;
@@ -14,7 +12,7 @@ entity animation is
     );
 end entity;
 
-architecture Behavioral of animation is
+architecture colorcycle of animation is
     type COLOR_TRANSITIONS is (RED_MAGENTA, MAGENTA_BLUE, BLUE_CYAN, CYAN_GREEN, GREEN_YELLOW, YELLOW_RED);
 begin
 
@@ -52,11 +50,17 @@ begin
             else phase := RED_MAGENTA; end if;
         end case;
         do1 <= std_logic_vector(to_unsigned(r_count, 8)) &
-        std_logic_vector(to_unsigned(g_count, 8)) &
-        std_logic_vector(to_unsigned(b_count, 8));
+            std_logic_vector(to_unsigned(g_count, 8)) &
+            std_logic_vector(to_unsigned(b_count, 8));
         do2 <= std_logic_vector(to_unsigned(r_count, 8)) &
-        std_logic_vector(to_unsigned(g_count, 8)) &
-        std_logic_vector(to_unsigned(b_count, 8));
+            std_logic_vector(to_unsigned(g_count, 8)) &
+            std_logic_vector(to_unsigned(b_count, 8));
     end if;
 end process;
+end architecture;
+
+architecture colorswipe of animation is
+begin
+
+
 end architecture;

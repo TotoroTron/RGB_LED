@@ -126,7 +126,7 @@ begin
             if(rep_count < frame_reps) then    --display the color frame_reps times before displaying next color
                 next_rep_count <= rep_count + 1;
             else
-                frame_req <= '1';
+                frame_req <= '1'; --request the next frame
                 next_rep_count <= 0;
             end if;
         end if;
