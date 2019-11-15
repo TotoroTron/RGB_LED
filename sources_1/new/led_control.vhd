@@ -8,9 +8,8 @@ entity led_control is
         clk2 : in std_logic; --internal clock
         reset : in std_logic;
         start : in std_logic;
-        di1 : in std_logic_vector(23 downto 0);
-        di2 : in std_logic_vector(23 downto 0);
-        addr : out std_logic_vector(8 downto 0);
+        di1 : in std_logic_vector(COLOR_DEPTH-1 downto 0);
+        di2 : in std_logic_vector(COLOR_DEPTH-1 downto 0);
         
         frame_req : out std_logic;
         rgb1, rgb2 : out std_logic_vector(2 downto 0);
@@ -24,13 +23,14 @@ end entity;
 architecture behavioral of led_control is
     type STATE_TYPE is (INIT, GET_DATA, NEXT_COLUMN, LATCH_INCR_SECTION, INCR_DUTY_FRAME);
     signal state, next_state : STATE_TYPE;
-    signal col, next_col : integer range 0 to 31;
+    
+    signal col, next_col : integer range 0 to IMG_WIDTH-1;
     signal sect, next_sect : integer range 0 to 15;
+    
     signal next_rgb1, next_rgb2 : std_logic_vector(2 downto 0);
-    signal duty, next_duty : integer range 0 to 255;
+    signal duty, next_duty : integer range 0 to 2**(COLOR_DEPTH/3)-1;
     signal rep_count, next_rep_count : integer range 0 to 20; --frame repeat
-    signal s_addr, next_addr : std_logic_vector(8 downto 0);
-    constant frame_reps : integer := 0;
+    constant frame_reps : integer := 1;
 begin
 
 STATE_REGISTER : process(clk2, start, reset)
@@ -44,7 +44,6 @@ begin
             sect <= 0;
             duty <= 0;
             rep_count <= 0;
-            s_addr <= (others => '0');
         elsif(running = true) then
             state <= next_state;
             rgb1 <= next_rgb1;
@@ -54,29 +53,27 @@ begin
             sel <= std_logic_vector(to_unsigned(next_sect, 4));
             duty <= next_duty;
             rep_count <= next_rep_count;
-            s_addr <= next_addr;
         end if;
     end if;
 end process;
 
 STATE_MACHINE : process(state, col ,sect, duty, di1, di2, rep_count)
     variable v_rgb1, v_rgb2 : std_logic_vector(2 downto 0);
-    variable r_count1, g_count1, b_count1 : integer range 0 to 255;
-    variable r_count2, g_count2, b_count2 : integer range 0 to 255;
+    variable r_count1, g_count1, b_count1 : integer range 0 to 2**(COLOR_DEPTH/3)-1;
+    variable r_count2, g_count2, b_count2 : integer range 0 to 2**(COLOR_DEPTH/3)-1;
 begin
-    addr <= s_addr;
     frame_req <= '0';
     next_state <= state;
     next_col <= col;
     next_sect <= sect;
     next_duty <= duty;
     next_rep_count <= rep_count;
-    r_count1 := to_integer( unsigned( di1(23 downto 16) )); --255
-    g_count1 := to_integer( unsigned( di1(15 downto  8) )); --0
-    b_count1 := to_integer( unsigned( di1( 7 downto  0) )); --0
-    r_count2 := to_integer( unsigned( di2(23 downto 16) )); --255
-    g_count2 := to_integer( unsigned( di2(15 downto  8) )); --0
-    b_count2 := to_integer( unsigned( di2( 7 downto  0) )); --0
+    r_count1 := to_integer( unsigned( di1(COLOR_DEPTH-1 downto 2*COLOR_DEPTH/3) )); --63
+    g_count1 := to_integer( unsigned( di1(2*(COLOR_DEPTH/3)-1 downto  COLOR_DEPTH/3) )); --0
+    b_count1 := to_integer( unsigned( di1( (COLOR_DEPTH/3-1) downto  0) )); --0
+    r_count2 := to_integer( unsigned( di2(COLOR_DEPTH-1 downto 2*COLOR_DEPTH/3) )); --63
+    g_count2 := to_integer( unsigned( di2(2*(COLOR_DEPTH/3)-1 downto  COLOR_DEPTH/3) )); --0
+    b_count2 := to_integer( unsigned( di2( (COLOR_DEPTH/3)-1 downto  0) )); --0
     v_rgb1 := "000"; 
     v_rgb2 := "000";
     clk_out <= '0';
@@ -97,12 +94,7 @@ begin
     when NEXT_COLUMN =>
         oe <= '0';
         clk_out <= '1';
-        if( to_integer( unsigned (s_addr)) < 511) then
-            next_addr <= std_logic_vector(unsigned(s_addr) + 1);
-        else
-            next_addr <= (others => '0');
-        end if;
-        if(col < 31) then
+        if(col < IMG_WIDTH-1) then
             next_col <= col + 1;
             next_state <= GET_DATA;
         else
@@ -119,7 +111,7 @@ begin
             next_state <= INCR_DUTY_FRAME;
         end if;
     when INCR_DUTY_FRAME =>
-        if(duty < 255) then
+        if(duty < 2**(COLOR_DEPTH/3)-1) then
             next_duty <= duty + 1;
         else
             next_duty <= 0;

@@ -2,9 +2,21 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 package parameters is
-    type table is array(255 downto 0) of integer;
-    
+    type table is array(63 downto 0) of integer;
+    type table255 is array(255 downto 0) of integer;
     signal gamma : table :=
+    (
+        0, 0, 0, 0, 0, 0, 0, 1,
+        1, 1, 1, 1, 2, 2, 2, 3, 
+        3, 4, 4, 5, 5, 6, 6, 7,
+        8, 8, 9, 10, 11, 11, 12, 13,
+        14, 15, 16, 17, 18, 20, 21, 22,
+        23, 24, 26, 27, 29, 30, 32, 33, 
+        35, 36, 38, 40, 41, 43, 45, 47, 
+        49, 51, 53, 55, 57, 59, 61, 63
+    );
+    
+    signal gamma255 : table255 :=
     (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
@@ -24,8 +36,8 @@ package parameters is
         215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255
     );
     
---    type ROM_TYPE is array (1535 downto 0) of std_logic_vector(23 downto 0);
---    signal rom_upper : ROM_TYPE;
---    signal rom_lower : ROM_TYPE;
+    constant IMG_WIDTH : integer := 64;
+    constant IMG_HEIGHT : integer := 32;
+    constant COLOR_DEPTH : integer := 18;
 
 end package;

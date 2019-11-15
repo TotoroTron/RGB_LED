@@ -1,10 +1,11 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
+use work.parameters.all;
 
 entity top_level is
     generic(
-        --available modes: colorcycle, rainbowswipe, gifplayer
+        
         delay : integer := 6
     );
     port(
@@ -22,10 +23,15 @@ entity top_level is
 end top_level;
 
 architecture Behavioral of top_level is
-    signal data : std_logic_vector(47 downto 0); --MSB: lower half, LSB: upper half
+    signal data : std_logic_vector(2*COLOR_DEPTH-1 downto 0); --MSB: lower half, LSB: upper half
     signal clk2 : std_logic;
     signal frame_req : std_logic;
-    signal addr : std_logic_vector(8 downto 0);
+    component animation
+        port(clk, start, reset, frame_req : in std_logic;
+        do1, do2 : out std_logic_vector(COLOR_DEPTH-1 downto 0)
+        );
+    end component;
+    for ANIMATION_BLOCK: animation use entity work.animation(colorcycle);
 begin
     CLOCK_DIV : process(clk_in)
         variable count : integer range 0 to delay;
@@ -55,22 +61,17 @@ begin
         clk_out => clk_out,
         reset => reset,
         start => start,
-        di1 => data(23 downto 0),
-        di2 => data(47 downto 24),
-        addr => addr
+        di1 => data(COLOR_DEPTH-1 downto 0),
+        di2 => data(2*COLOR_DEPTH-1 downto COLOR_DEPTH)
     );
     
-    ANIMATION: entity work.animation
-    generic map(
-        mode => "colorcycle"
-    )
+    ANIMATION_BLOCK: animation
     port map(
+        clk => clk2,
         start => start,
         reset => reset,
         frame_req => frame_req,
-        do1 => data(23 downto 0),
-        do2 => data(47 downto 24)
+        do1 => data(COLOR_DEPTH-1 downto 0),
+        do2 => data(2*COLOR_DEPTH-1 downto COLOR_DEPTH)
     );
-    
-    
 end Behavioral;
