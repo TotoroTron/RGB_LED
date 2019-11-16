@@ -5,12 +5,10 @@ use work.parameters.all;
 
 entity top_level is
     generic(
-        
         delay : integer := 6
     );
     port(
         clk_in : in std_logic; --internal clock
-        
         rgb1, rgb2 : out std_logic_vector(2 downto 0);
         sel : out std_logic_vector(3 downto 0);  
         lat : out std_logic;                            
@@ -18,6 +16,7 @@ entity top_level is
         clk_out : out std_logic; --clock to LED display
         reset : in std_logic;
         start : in std_logic;
+        disp_en : in std_logic;
         gnd : out std_logic_vector(2 downto 0) := "000"
     );
 end top_level;
@@ -26,13 +25,22 @@ architecture Behavioral of top_level is
     signal data : std_logic_vector(2*COLOR_DEPTH-1 downto 0); --MSB: lower half, LSB: upper half
     signal clk2 : std_logic;
     signal frame_req : std_logic;
+    signal s_rgb1, s_rgb2 : std_logic_vector(2 downto 0);
     component animation
         port(clk, start, reset, frame_req : in std_logic;
         do1, do2 : out std_logic_vector(COLOR_DEPTH-1 downto 0)
         );
     end component;
-    for ANIMATION_BLOCK: animation use entity work.animation(colorcycle);
+    for ANIMATION_BLOCK: animation use entity work.animation(yellow);
 begin
+    
+    with disp_en select rgb1 <=
+        "000" when '0',
+        s_rgb1 when '1';
+    with disp_en select rgb2 <=
+        "000" when '0',
+        s_rgb2 when '1';
+    
     CLOCK_DIV : process(clk_in)
         variable count : integer range 0 to delay;
     begin
@@ -53,8 +61,8 @@ begin
     port map(
         clk2 => clk2,
         frame_req => frame_req,
-        rgb1 => rgb1,
-        rgb2 => rgb2,
+        rgb1 => s_rgb1,
+        rgb2 => s_rgb2,
         sel => sel,
         lat => lat,
         oe => oe,

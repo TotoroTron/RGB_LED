@@ -59,45 +59,59 @@ architecture solidcolor of animation is
     type COLORS is (
         RED, MAGENTA, BLUE, CYAN, GREEN, YELLOW
     );
+    type rgb_type is array (0 to 2) of integer range 0 to 2**(COLOR_DEPTH/3)-1;
     signal phase : COLORS;
 begin
 STATE_MACHINE: process(frame_req ,phase)
-    variable r_count, g_count, b_count : integer range 0 to 2**(COLOR_DEPTH/3) := 0;
+    variable rgb : rgb_type;
     variable period_count : integer range 0 to 100;
 begin
     if rising_edge(frame_req) then
         case phase is
         when RED =>
-            r_count := 63; g_count := 0; b_count := 0;
+            rgb := (63, 0, 0);
             if period_count < 100 then period_count := period_count + 1;
             else phase <= MAGENTA; period_count := 0; end if;
         when MAGENTA =>
-            r_count := 63; g_count := 0; b_count := 63;
+            rgb := (63, 0, 63);
             if period_count < 100 then period_count := period_count + 1;
             else phase <= BLUE; period_count := 0; end if;
         when BLUE =>
-            r_count := 0; g_count := 0; b_count := 63;
+            rgb := (0, 0, 63);
             if period_count < 100 then period_count := period_count + 1;
             else phase <= CYAN; period_count := 0; end if;
         when CYAN =>
-            r_count := 0; g_count := 63; b_count := 63;
+            rgb := (0, 63, 63);
             if period_count < 100 then period_count := period_count + 1;
             else phase <= GREEN; period_count := 0; end if;
         when GREEN =>
-            r_count := 0; g_count := 63; b_count := 0;
+            rgb := (0, 63, 0);
             if period_count < 100 then period_count := period_count + 1;
             else phase <= YELLOW; period_count := 0; end if;                
         when YELLOW =>
-            r_count := 63; g_count := 63; b_count := 0;
+            rgb := (32, 32, 0);
             if period_count < 100 then period_count := period_count + 1;
             else phase <= RED; period_count := 0; end if;
         end case;
-        do1 <= std_logic_vector(to_unsigned(r_count, COLOR_DEPTH/3)) &
-            std_logic_vector(to_unsigned(g_count, COLOR_DEPTH/3)) &
-            std_logic_vector(to_unsigned(b_count, COLOR_DEPTH/3));
-        do2 <= std_logic_vector(to_unsigned(r_count, COLOR_DEPTH/3)) &
-            std_logic_vector(to_unsigned(g_count, COLOR_DEPTH/3)) &
-            std_logic_vector(to_unsigned(b_count, COLOR_DEPTH/3));
+        do1 <= std_logic_vector(to_unsigned(rgb(0), COLOR_DEPTH/3)) &
+            std_logic_vector(to_unsigned(rgb(1), COLOR_DEPTH/3)) &
+            std_logic_vector(to_unsigned(rgb(2), COLOR_DEPTH/3));
+        do2 <= std_logic_vector(to_unsigned(rgb(0), COLOR_DEPTH/3)) &
+            std_logic_vector(to_unsigned(rgb(1), COLOR_DEPTH/3)) &
+            std_logic_vector(to_unsigned(rgb(2), COLOR_DEPTH/3));
     end if;
 end process;
+end architecture;
+
+architecture yellow of animation is
+    type rgb_type is array (0 to 2) of integer range 0 to 2**(COLOR_DEPTH/3)-1;
+    signal rgb : rgb_type;
+begin
+    rgb <= (0, 0, 0);
+    do1 <= std_logic_vector(to_unsigned(rgb(0), COLOR_DEPTH/3)) &
+        std_logic_vector(to_unsigned(rgb(1), COLOR_DEPTH/3)) &
+        std_logic_vector(to_unsigned(rgb(2), COLOR_DEPTH/3));
+    do2 <= std_logic_vector(to_unsigned(rgb(0), COLOR_DEPTH/3)) &
+        std_logic_vector(to_unsigned(rgb(1), COLOR_DEPTH/3)) &
+        std_logic_vector(to_unsigned(rgb(2), COLOR_DEPTH/3));
 end architecture;
