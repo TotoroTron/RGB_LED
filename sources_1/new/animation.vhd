@@ -13,18 +13,22 @@ entity animation is
     );
 end entity;
 
-architecture colorcycle of animation is
+architecture COLORCYCLE of animation is
     type COLOR_TRANSITIONS is (
         RED_MAGENTA, MAGENTA_BLUE, BLUE_CYAN, CYAN_GREEN, GREEN_YELLOW, YELLOW_RED
     );
     signal phase : COLOR_TRANSITIONS;
 begin
 
-STATE_MACHINE: process(frame_req ,phase)
+STATE_MACHINE: process(clk, frame_req, phase, reset)
     variable r_count : integer range 0 to 2**(COLOR_DEPTH/3)-1 := 2**(COLOR_DEPTH/3)-1;
     variable g_count, b_count : integer range 0 to 2**(COLOR_DEPTH/3)-1 := 0;
 begin
-    if rising_edge(frame_req) then
+if rising_edge(clk) then
+    if reset = '1' then
+        phase <= RED_MAGENTA;
+        r_count := 63; g_count := 0; b_count := 0;
+    elsif frame_req = '1' then
         case phase is
         when RED_MAGENTA =>
             if(b_count < 2**(COLOR_DEPTH/3)-1) then b_count := b_count + 1;
@@ -52,10 +56,11 @@ begin
             std_logic_vector(to_unsigned(g_count, COLOR_DEPTH/3)) &
             std_logic_vector(to_unsigned(b_count, COLOR_DEPTH/3));
     end if;
+end if;
 end process;
-end architecture;
+end architecture COLORCYCLE;
 
-architecture solidcolor of animation is
+architecture SOLIDCOLOR of animation is
     type COLORS is (
         RED, MAGENTA, BLUE, CYAN, GREEN, YELLOW
     );
@@ -100,4 +105,14 @@ begin
             std_logic_vector(to_unsigned(b_count, COLOR_DEPTH/3));
     end if;
 end process;
-end architecture;
+end architecture SOLIDCOLOR;
+
+architecture RAINBOWSHIFT of animation is
+begin
+
+    STATE_MACHINE: process(clk, reset)
+    begin
+        
+        
+    end process;
+end architecture RAINBOWSHIFT;

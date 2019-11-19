@@ -12,6 +12,9 @@ entity led_control is
         di2 : in std_logic_vector(COLOR_DEPTH-1 downto 0);
         
         frame_req : out std_logic;
+        img_col : out std_logic_vector(4 downto 0);
+        img_row : out std_logic_vector(3 downto 0);
+        
         rgb1, rgb2 : out std_logic_vector(2 downto 0);
         sel : out std_logic_vector(3 downto 0);  
         lat : out std_logic;                            
@@ -30,7 +33,7 @@ architecture behavioral of led_control is
     signal next_rgb1, next_rgb2 : std_logic_vector(2 downto 0);
     signal duty, next_duty : integer range 0 to 2**(COLOR_DEPTH/3)-1;
     signal rep_count, next_rep_count : integer range 0 to 20; --frame repeat
-    constant frame_reps : integer := 1;
+    constant frame_reps : integer := 0;
 begin
 
 STATE_REGISTER : process(clk2, start, reset)
@@ -84,12 +87,12 @@ begin
         next_state <= GET_DATA;
     when GET_DATA =>
         oe <= '0';
-        if(duty < gamma(r_count1) ) then v_rgb1(0) := '1'; end if;
+        if(duty < gamma(r_count1) ) then v_rgb1(2) := '1'; end if;
         if(duty < gamma(g_count1) ) then v_rgb1(1) := '1'; end if;
-        if(duty < gamma(b_count1) ) then v_rgb1(2) := '1'; end if;
-        if(duty < gamma(r_count2) ) then v_rgb2(0) := '1'; end if;
+        if(duty < gamma(b_count1) ) then v_rgb1(0) := '1'; end if;
+        if(duty < gamma(r_count2) ) then v_rgb2(2) := '1'; end if;
         if(duty < gamma(g_count2) ) then v_rgb2(1) := '1'; end if;
-        if(duty < gamma(b_count2) ) then v_rgb2(2) := '1'; end if;        
+        if(duty < gamma(b_count2) ) then v_rgb2(0) := '1'; end if;        
         next_state <= NEXT_COLUMN;
     when NEXT_COLUMN =>
         oe <= '0';
