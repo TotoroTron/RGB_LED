@@ -29,12 +29,6 @@ architecture Behavioral of top_level is
     signal s_rgb1, s_rgb2 : std_logic_vector(2 downto 0);
     signal s_col : std_logic_vector(4 downto 0); --0 to 31
     signal s_row : std_logic_vector(3 downto 0); --0 to 15
-    
-    component animation
-        port(clk, start, reset, frame_req : in std_logic;
-        do1, do2 : out std_logic_vector(COLOR_DEPTH-1 downto 0));
-    end component;
-    for ANIMATION_BLOCK: animation use entity work.animation(colorcycle);
 begin
     
     with disp_en select rgb1 <=
@@ -77,7 +71,7 @@ begin
         di2 => data(2*COLOR_DEPTH-1 downto COLOR_DEPTH)
     );
     
-    ANIMATION_BLOCK: animation
+    ANIMATION_BLOCK: entity work.animation(colorcycle)
     port map(
         clk => clk2,
         start => start,
