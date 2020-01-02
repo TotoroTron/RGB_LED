@@ -25,6 +25,11 @@ end top_level;
 
 architecture Behavioral of top_level is
     signal data : std_logic_vector(2*COLOR_DEPTH-1 downto 0); --MSB: lower half, LSB: upper half
+    signal addr_upper : std_logic_vector(8 downto 0); -- upper 32x16 LEDS = 512 mem locations
+    signal addr_lower : std_logic_vector(8 downto 0); -- lower 32x16 LEDS = 512 mem locations
+    signal en : std_logic;
+    signal rst : std_logic;
+    
     signal clk2 : std_logic;
     signal frame_req : std_logic;
     signal s_rgb1, s_rgb2 : std_logic_vector(2 downto 0);
@@ -63,14 +68,44 @@ begin
         di2 => data(2*COLOR_DEPTH-1 downto COLOR_DEPTH)
     );
     
-    ANIMATION_BLOCK: entity work.animation(solidcolor)
-    port map(
-        clk => clk2,
-        start => start,
-        reset => reset,
-        frame_req => frame_req,
-        do1 => data(COLOR_DEPTH-1 downto 0),
-        do2 => data(2*COLOR_DEPTH-1 downto COLOR_DEPTH)
+    xpm_memory_dprom_inst : xpm_memory_dprom
+    generic map (
+        ADDR_WIDTH_A => 9, -- DECIMAL
+        ADDR_WIDTH_B => 9, -- DECIMAL
+        AUTO_SLEEP_TIME => 0, -- DECIMAL
+        ECC_MODE => "no_ecc", -- String
+        MEMORY_INIT_FILE => "rom.mem", -- String
+        MEMORY_INIT_PARAM => "0", -- String
+        MEMORY_OPTIMIZATION => "false", -- String
+        MEMORY_PRIMITIVE => "block", -- String
+        MEMORY_SIZE => 24576, -- 32x32x24
+        MESSAGE_CONTROL => 0, -- DECIMAL
+        READ_DATA_WIDTH_A => 24, -- DECIMAL
+        READ_DATA_WIDTH_B => 24, -- DECIMAL
+        READ_LATENCY_A => 0, -- DECIMAL
+        READ_RESET_VALUE_A => "0", -- String
+        READ_LATENCY_B => 0, -- DECIMAL
+        READ_RESET_VALUE_B => "0", -- String
+        USE_MEM_INIT => 1, -- DECIMAL
+        WAKEUP_TIME => "disable_sleep" -- String
+    )
+    port map (
+        douta => data,
+        addra => addr_upper,
+        addrb => addr_lower,
+        clka => clk2,
+        clkb => clk2,
+        ena => en,
+        enb => en,
+        injectdbiterra => '0', -- 1-bit input: Do not change from the provided value.
+        injectsbiterra => '0', -- 1-bit input: Do not change from the provided value.
+        injectdbiterrb => '0', -- 1-bit input: Do not change from the provided value.
+        injectsbiterrb => '0', -- 1-bit input: Do not change from the provided value.
+        regcea => '1',
+        regceb => '1',
+        rsta => rst,
+        rstb => rst,
+        sleep => '0'
     );
 
 end Behavioral;
