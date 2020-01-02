@@ -7,10 +7,10 @@ use xpm.vcomponents.all;
 
 entity top_level is
     generic(
-        delay : integer := 4
+        clk_delay : integer := 4
     );
     port(
-        clk_in : in std_logic; --internal clock
+        clk : in std_logic; --internal clock
         reset : in std_logic;
         start : in std_logic;
         disp_en : in std_logic;
@@ -40,21 +40,12 @@ begin
         "000" when '0',
         s_rgb2 when '1';
     
-    CLOCK_DIV : process(clk_in)
-        variable count : integer range 0 to delay;
-    begin
-        if rising_edge(clk_in) then
-            if count < delay/2 then
-                clk2 <= '0';
-                count := count + 1;
-            elsif count < delay then
-                clk2 <= '1';
-                count := count + 1;
-            else
-                count := 0;
-            end if;
-        end if;
-    end process;
+	CLK_DIV : entity work.clk_div
+        generic map(clk_delay => clk_delay)
+        port map(
+           clk_in => clk,
+           clk_out => clk2
+    );
     
     LED_CONTROL: entity work.led_control
     port map(
