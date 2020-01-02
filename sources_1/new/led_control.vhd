@@ -65,34 +65,33 @@ STATE_MACHINE : process(state, col ,sect, duty, di1, di2, rep_count)
     variable r_count1, g_count1, b_count1 : integer range 0 to 2**(COLOR_DEPTH/3)-1;
     variable r_count2, g_count2, b_count2 : integer range 0 to 2**(COLOR_DEPTH/3)-1;
 begin
+    --DEFAULT SIGNAL ASSIGNMENTS
     frame_req <= '0';
     next_state <= state;
     next_col <= col;
     next_sect <= sect;
     next_duty <= duty;
     next_rep_count <= rep_count;
-    r_count1 := to_integer( unsigned( di1(COLOR_DEPTH-1 downto 2*COLOR_DEPTH/3) )); --63
-    g_count1 := to_integer( unsigned( di1(2*(COLOR_DEPTH/3)-1 downto  COLOR_DEPTH/3) )); --0
-    b_count1 := to_integer( unsigned( di1( (COLOR_DEPTH/3-1) downto  0) )); --0
-    r_count2 := to_integer( unsigned( di2(COLOR_DEPTH-1 downto 2*COLOR_DEPTH/3) )); --63
-    g_count2 := to_integer( unsigned( di2(2*(COLOR_DEPTH/3)-1 downto  COLOR_DEPTH/3) )); --0
-    b_count2 := to_integer( unsigned( di2( (COLOR_DEPTH/3)-1 downto  0) )); --0
-    v_rgb1 := "000"; 
-    v_rgb2 := "000";
-    clk_out <= '0';
-    lat <= '0';
-    oe <= '1';
+    v_rgb1 := "000"; v_rgb2 := "000"; clk_out <= '0'; lat <= '0'; oe <= '1';
+    
+    r_count1 := to_integer( unsigned( di1(  COLOR_DEPTH-1 downto 2*COLOR_DEPTH/3) )); --bits 23 downto 18
+    g_count1 := to_integer( unsigned( di1( 2*(COLOR_DEPTH/3)-1 downto  COLOR_DEPTH/3) )); --bits 17 downto 8
+    b_count1 := to_integer( unsigned( di1( COLOR_DEPTH/3-1 downto  0) )); --bits 7 downto 0
+    r_count2 := to_integer( unsigned( di2( COLOR_DEPTH-1 downto 2*COLOR_DEPTH/3) )); --bits 23 downto 18
+    g_count2 := to_integer( unsigned( di2( 2*(COLOR_DEPTH/3)-1 downto  COLOR_DEPTH/3) )); --bits 17 downto 8
+    b_count2 := to_integer( unsigned( di2( COLOR_DEPTH/3-1 downto  0) )); --bits 7 downto 0
+    
     case state is
     when INIT =>
         next_state <= GET_DATA;
     when GET_DATA =>
         oe <= '0';
-        if(duty < gamma(r_count1) ) then v_rgb1(2) := '1'; end if;
-        if(duty < gamma(g_count1) ) then v_rgb1(1) := '1'; end if;
-        if(duty < gamma(b_count1) ) then v_rgb1(0) := '1'; end if;
-        if(duty < gamma(r_count2) ) then v_rgb2(2) := '1'; end if;
-        if(duty < gamma(g_count2) ) then v_rgb2(1) := '1'; end if;
-        if(duty < gamma(b_count2) ) then v_rgb2(0) := '1'; end if;        
+        if(duty < gamma255(r_count1) ) then v_rgb1(2) := '1'; end if;
+        if(duty < gamma255(g_count1) ) then v_rgb1(1) := '1'; end if;
+        if(duty < gamma255(b_count1) ) then v_rgb1(0) := '1'; end if;
+        if(duty < gamma255(r_count2) ) then v_rgb2(2) := '1'; end if;
+        if(duty < gamma255(g_count2) ) then v_rgb2(1) := '1'; end if;
+        if(duty < gamma255(b_count2) ) then v_rgb2(0) := '1'; end if;        
         next_state <= NEXT_COLUMN;
     when NEXT_COLUMN =>
         oe <= '0';
@@ -127,6 +126,7 @@ begin
         end if;
         next_state <= GET_DATA;
     end case;
+    
     next_rgb1 <= v_rgb1;
     next_rgb2 <= v_rgb2;
 end process;

@@ -36,8 +36,8 @@ package parameters is
         215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255
     );
     
-    constant IMG_WIDTH : integer := 64;
+    constant IMG_WIDTH : integer := 32;
     constant IMG_HEIGHT : integer := 32;
-    constant COLOR_DEPTH : integer := 18;
+    constant COLOR_DEPTH : integer := 24;
 
 end package;

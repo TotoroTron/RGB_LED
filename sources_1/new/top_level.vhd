@@ -2,10 +2,12 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use work.parameters.all;
+Library xpm;
+use xpm.vcomponents.all;
 
 entity top_level is
     generic(
-        delay : integer := 6
+        delay : integer := 4
     );
     port(
         clk_in : in std_logic; --internal clock
@@ -17,8 +19,7 @@ entity top_level is
         lat : out std_logic;                            
         oe : out std_logic;
         clk_out : out std_logic; --clock to LED display
-        gnd : out std_logic_vector(2 downto 0) := "000";
-        probe : out std_logic
+        gnd : out std_logic_vector(2 downto 0) := "000"
     );
 end top_level;
 
@@ -31,13 +32,13 @@ architecture Behavioral of top_level is
     signal s_row : std_logic_vector(3 downto 0); --0 to 15
 begin
     
+    --DISPLAY ON/OFF SWITCH
     with disp_en select rgb1 <=
         "000" when '0',
         s_rgb1 when '1';
     with disp_en select rgb2 <=
         "000" when '0',
         s_rgb2 when '1';
-    probe <= clk2;
     
     CLOCK_DIV : process(clk_in)
         variable count : integer range 0 to delay;
@@ -80,4 +81,5 @@ begin
         do1 => data(COLOR_DEPTH-1 downto 0),
         do2 => data(2*COLOR_DEPTH-1 downto COLOR_DEPTH)
     );
+
 end Behavioral;
