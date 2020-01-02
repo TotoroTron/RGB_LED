@@ -72,7 +72,7 @@ begin
         di2 => data(2*COLOR_DEPTH-1 downto COLOR_DEPTH)
     );
     
-    ANIMATION_BLOCK: entity work.animation(colorcycle)
+    ANIMATION_BLOCK: entity work.animation(solidcolor)
     port map(
         clk => clk2,
         start => start,

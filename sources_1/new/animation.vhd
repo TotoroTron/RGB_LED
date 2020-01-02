@@ -66,53 +66,48 @@ architecture SOLIDCOLOR of animation is
     );
     signal phase : COLORS;
 begin
-STATE_MACHINE: process(frame_req ,phase)
+STATE_MACHINE: process(clk, frame_req ,phase)
     variable r_count, g_count, b_count : integer range 0 to 2**(COLOR_DEPTH/3) := 0;
-    variable period_count : integer range 0 to 100;
+    variable period_count : integer range 0 to 100; --how many clocks long to hold each color
 begin
-    if rising_edge(frame_req) then
-        case phase is
-        when RED =>
-            r_count := 63; g_count := 0; b_count := 0;
-            if period_count < 100 then period_count := period_count + 1;
-            else phase <= MAGENTA; period_count := 0; end if;
-        when MAGENTA =>
-            r_count := 63; g_count := 0; b_count := 63;
-            if period_count < 100 then period_count := period_count + 1;
-            else phase <= BLUE; period_count := 0; end if;
-        when BLUE =>
-            r_count := 0; g_count := 0; b_count := 63;
-            if period_count < 100 then period_count := period_count + 1;
-            else phase <= CYAN; period_count := 0; end if;
-        when CYAN =>
-            r_count := 0; g_count := 63; b_count := 63;
-            if period_count < 100 then period_count := period_count + 1;
-            else phase <= GREEN; period_count := 0; end if;
-        when GREEN =>
-            r_count := 0; g_count := 63; b_count := 0;
-            if period_count < 100 then period_count := period_count + 1;
-            else phase <= YELLOW; period_count := 0; end if;                
-        when YELLOW =>
-            r_count := 63; g_count := 63; b_count := 0;
-            if period_count < 100 then period_count := period_count + 1;
-            else phase <= RED; period_count := 0; end if;
-        end case;
-        do1 <= std_logic_vector(to_unsigned(r_count, COLOR_DEPTH/3)) &
-            std_logic_vector(to_unsigned(g_count, COLOR_DEPTH/3)) &
-            std_logic_vector(to_unsigned(b_count, COLOR_DEPTH/3));
-        do2 <= std_logic_vector(to_unsigned(r_count, COLOR_DEPTH/3)) &
-            std_logic_vector(to_unsigned(g_count, COLOR_DEPTH/3)) &
-            std_logic_vector(to_unsigned(b_count, COLOR_DEPTH/3));
+    if rising_edge(clk) then
+        if reset = '1' then
+            phase <= RED;
+            r_count := 2**(COLOR_DEPTH/3)-1; g_count := 0; b_count := 0;
+        elsif frame_req = '1' then
+            case phase is
+            when RED =>
+                r_count := 2**(COLOR_DEPTH/3)-1; g_count := 0; b_count := 0;
+                if period_count < 100 then period_count := period_count + 1;
+                else phase <= MAGENTA; period_count := 0; end if;
+            when MAGENTA =>
+                r_count := 2**(COLOR_DEPTH/3)-1; g_count := 0; b_count := 2**(COLOR_DEPTH/3)-1;
+                if period_count < 100 then period_count := period_count + 1;
+                else phase <= BLUE; period_count := 0; end if;
+            when BLUE =>
+                r_count := 0; g_count := 0; b_count := 2**(COLOR_DEPTH/3)-1;
+                if period_count < 100 then period_count := period_count + 1;
+                else phase <= CYAN; period_count := 0; end if;
+            when CYAN =>
+                r_count := 0; g_count := 2**(COLOR_DEPTH/3)-1; b_count := 2**(COLOR_DEPTH/3)-1;
+                if period_count < 100 then period_count := period_count + 1;
+                else phase <= GREEN; period_count := 0; end if;
+            when GREEN =>
+                r_count := 0; g_count := 2**(COLOR_DEPTH/3)-1; b_count := 0;
+                if period_count < 100 then period_count := period_count + 1;
+                else phase <= YELLOW; period_count := 0; end if;                
+            when YELLOW =>
+                r_count := 2**(COLOR_DEPTH/3)-1; g_count := 2**(COLOR_DEPTH/3)-1; b_count := 0;
+                if period_count < 100 then period_count := period_count + 1;
+                else phase <= RED; period_count := 0; end if;
+            end case;
+            do1 <= std_logic_vector(to_unsigned(r_count, COLOR_DEPTH/3)) &
+                std_logic_vector(to_unsigned(g_count, COLOR_DEPTH/3)) &
+                std_logic_vector(to_unsigned(b_count, COLOR_DEPTH/3));
+            do2 <= std_logic_vector(to_unsigned(r_count, COLOR_DEPTH/3)) &
+                std_logic_vector(to_unsigned(g_count, COLOR_DEPTH/3)) &
+                std_logic_vector(to_unsigned(b_count, COLOR_DEPTH/3));
+        end if;
     end if;
 end process;
 end architecture SOLIDCOLOR;
-
-architecture RAINBOWSHIFT of animation is
-begin
-
-    STATE_MACHINE: process(clk, reset)
-    begin
-        
-        
-    end process;
-end architecture RAINBOWSHIFT;
