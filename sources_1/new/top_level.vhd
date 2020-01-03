@@ -25,12 +25,15 @@ end top_level;
 
 architecture Behavioral of top_level is
     signal data : std_logic_vector(2*COLOR_DEPTH-1 downto 0); --MSB: lower half, LSB: upper half
-    signal addr_upper : std_logic_vector(8 downto 0); -- upper 32x16 LEDS = 512 mem locations
-    signal addr_lower : std_logic_vector(8 downto 0); -- lower 32x16 LEDS = 512 mem locations
-    signal en : std_logic;
-    signal rst : std_logic;
+    SIGNAL NOT_DATA : std_logic_vector(2*COLOR_DEPTH-1 downto 0); 
+    signal addr : std_logic_vector(8 downto 0); --512 locations
+    signal addr_upper : std_logic_vector(9 downto 0); --1024 locations
+    signal addr_lower : std_logic_vector(9 downto 0); --1024 locations
+    signal en : std_logic := '1';
+    signal rst : std_logic := '0';
     
     signal clk2 : std_logic;
+    signal clk3 : std_logic;
     signal frame_req : std_logic;
     signal s_rgb1, s_rgb2 : std_logic_vector(2 downto 0);
     signal s_col : std_logic_vector(4 downto 0); --0 to 31
@@ -40,12 +43,14 @@ begin
     --DISPLAY ON/OFF SWITCH
     with disp_en select rgb1 <=
         "000" when '0',
-        s_rgb1 when '1';
+        s_rgb1 when '1',
+        "000" when others;
     with disp_en select rgb2 <=
         "000" when '0',
-        s_rgb2 when '1';
+        s_rgb2 when '1',
+        "000" when others;
     
-	CLK_DIV : entity work.clk_div
+	CLK_DIV_LED_CONTROL : entity work.clk_div
         generic map(clk_delay => clk_delay)
         port map(
            clk_in => clk,
@@ -64,17 +69,22 @@ begin
         clk_out => clk_out,
         reset => reset,
         start => start,
-        di1 => data(COLOR_DEPTH-1 downto 0),
-        di2 => data(2*COLOR_DEPTH-1 downto COLOR_DEPTH)
+        di1 => data(COLOR_DEPTH-1 downto 0), --upper
+        di2 => data(2*COLOR_DEPTH-1 downto COLOR_DEPTH), --lower
+        addr => addr
     );
+    
+    addr_upper <= '0' & addr;
+    addr_lower <= '1' & addr;
+    data <= NOT not_data;
     
     xpm_memory_dprom_inst : xpm_memory_dprom
     generic map (
-        ADDR_WIDTH_A => 9, -- DECIMAL
-        ADDR_WIDTH_B => 9, -- DECIMAL
+        ADDR_WIDTH_A => 10, -- DECIMAL
+        ADDR_WIDTH_B => 10, -- DECIMAL
         AUTO_SLEEP_TIME => 0, -- DECIMAL
         ECC_MODE => "no_ecc", -- String
-        MEMORY_INIT_FILE => "rom.mem", -- String
+        MEMORY_INIT_FILE => "rom2.mem", -- String
         MEMORY_INIT_PARAM => "0", -- String
         MEMORY_OPTIMIZATION => "false", -- String
         MEMORY_PRIMITIVE => "block", -- String
@@ -82,19 +92,20 @@ begin
         MESSAGE_CONTROL => 0, -- DECIMAL
         READ_DATA_WIDTH_A => 24, -- DECIMAL
         READ_DATA_WIDTH_B => 24, -- DECIMAL
-        READ_LATENCY_A => 0, -- DECIMAL
+        READ_LATENCY_A => 1, -- DECIMAL
         READ_RESET_VALUE_A => "0", -- String
-        READ_LATENCY_B => 0, -- DECIMAL
+        READ_LATENCY_B => 1, -- DECIMAL
         READ_RESET_VALUE_B => "0", -- String
         USE_MEM_INIT => 1, -- DECIMAL
         WAKEUP_TIME => "disable_sleep" -- String
     )
     port map (
-        douta => data,
+        douta => not_data(COLOR_DEPTH-1 downto 0), --upper
+        doutb => not_data(2*COLOR_DEPTH-1 downto COLOR_DEPTH), --lower
         addra => addr_upper,
         addrb => addr_lower,
-        clka => clk2,
-        clkb => clk2,
+        clka => clk, --ref clock
+        clkb => clk, --ref clock
         ena => en,
         enb => en,
         injectdbiterra => '0', -- 1-bit input: Do not change from the provided value.
@@ -107,5 +118,7 @@ begin
         rstb => rst,
         sleep => '0'
     );
+    
+    
 
 end Behavioral;
