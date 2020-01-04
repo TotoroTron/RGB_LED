@@ -21,7 +21,7 @@ entity led_control is
         oe : out std_logic;
         clk_out : out std_logic; --clock to LED display
         
-        addr : out std_logic_vector(8 downto 0) := "000000000"
+        addr : out std_logic_vector(8 downto 0)
     );
 end entity;
 
@@ -37,7 +37,7 @@ architecture behavioral of led_control is
     signal rep_count, next_rep_count : integer range 0 to 20; --frame repeat
     constant frame_reps : integer := 0;
     
-    signal led_count, next_led_count : integer range 0 to 512;
+    signal led_count, next_led_count : integer range 0 to 511;
 begin
 
     rgb1 <= s_rgb1; rgb2 <= s_rgb2;
@@ -64,6 +64,7 @@ begin
             duty <= next_duty;
             rep_count <= next_rep_count;
             led_count <= next_led_count;
+            addr <= std_logic_vector(to_unsigned(next_led_count, 9));
         end if;
     end if;
 end process;
@@ -85,18 +86,16 @@ begin
     next_led_count <= led_count;
     v_rgb1 := "000"; v_rgb2 := "000"; clk_out <= '0'; lat <= '0'; oe <= '1';
     
-    r_count1 := to_integer( unsigned( di1(  COLOR_DEPTH-1 downto 2*COLOR_DEPTH/3) )); --bits 23 downto 18
-    g_count1 := to_integer( unsigned( di1( 2*(COLOR_DEPTH/3)-1 downto  COLOR_DEPTH/3) )); --bits 17 downto 8
+    r_count1 := to_integer( unsigned( di1(  COLOR_DEPTH-1 downto 2*COLOR_DEPTH/3) )); --bits 23 downto 16
+    g_count1 := to_integer( unsigned( di1( 2*COLOR_DEPTH/3-1 downto  COLOR_DEPTH/3) )); --bits 15 downto 8
     b_count1 := to_integer( unsigned( di1( COLOR_DEPTH/3-1 downto  0) )); --bits 7 downto 0
-    r_count2 := to_integer( unsigned( di2( COLOR_DEPTH-1 downto 2*COLOR_DEPTH/3) )); --bits 23 downto 18
-    g_count2 := to_integer( unsigned( di2( 2*(COLOR_DEPTH/3)-1 downto  COLOR_DEPTH/3) )); --bits 17 downto 8
+    r_count2 := to_integer( unsigned( di2( COLOR_DEPTH-1 downto 2*COLOR_DEPTH/3) )); --bits 23 downto 16
+    g_count2 := to_integer( unsigned( di2( 2*(COLOR_DEPTH/3)-1 downto  COLOR_DEPTH/3) )); --bits 15 downto 8
     b_count2 := to_integer( unsigned( di2( COLOR_DEPTH/3-1 downto  0) )); --bits 7 downto 0
     
     case state is
     when INIT =>
         next_state <= GET_DATA;
-        led_count <= 0;
-        addr <= (others => '0');
     when GET_DATA =>
         oe <= '0';
         if(duty < gamma255(r_count1) ) then v_rgb1(2) := '1'; end if;
@@ -106,13 +105,21 @@ begin
         if(duty < gamma255(g_count2) ) then v_rgb2(1) := '1'; end if;
         if(duty < gamma255(b_count2) ) then v_rgb2(0) := '1'; end if;        
         next_state <= NEXT_COLUMN;
+        
     when NEXT_COLUMN =>
         oe <= '0';  clk_out <= '1';
-        addr <= std_logic_vector(to_unsigned(led_count, 9));
-        if led_count < 512 then next_led_count <= led_count + 1;
-        else next_led_count <= 0; end if;
-        if(col < IMG_WIDTH-1) then next_col <= col + 1; next_state <= GET_DATA;
-        else next_col <= 0; next_state <= LATCH_INCR_SECTION; end if;
+        if led_count < 511 then
+            next_led_count <= led_count + 1;
+        else
+            next_led_count <= 0;
+        end if;        
+        if(col < IMG_WIDTH-1) then
+            next_col <= col + 1;
+            next_state <= GET_DATA;
+        else
+            next_col <= 0;
+            next_state <= LATCH_INCR_SECTION;
+        end if;
     when LATCH_INCR_SECTION =>
         lat <= '1';
         if(sect < 15) then

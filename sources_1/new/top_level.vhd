@@ -25,12 +25,10 @@ end top_level;
 
 architecture Behavioral of top_level is
     signal data : std_logic_vector(2*COLOR_DEPTH-1 downto 0); --MSB: lower half, LSB: upper half
-    SIGNAL NOT_DATA : std_logic_vector(2*COLOR_DEPTH-1 downto 0); 
+--    SIGNAL NOT_DATA : std_logic_vector(2*COLOR_DEPTH-1 downto 0); 
     signal addr : std_logic_vector(8 downto 0); --512 locations
     signal addr_upper : std_logic_vector(9 downto 0); --1024 locations
     signal addr_lower : std_logic_vector(9 downto 0); --1024 locations
-    signal en : std_logic := '1';
-    signal rst : std_logic := '0';
     
     signal clk2 : std_logic;
     signal clk3 : std_logic;
@@ -76,7 +74,7 @@ begin
     
     addr_upper <= '0' & addr;
     addr_lower <= '1' & addr;
-    data <= NOT not_data;
+--    data <= NOT not_data;
     
     xpm_memory_dprom_inst : xpm_memory_dprom
     generic map (
@@ -84,7 +82,7 @@ begin
         ADDR_WIDTH_B => 10, -- DECIMAL
         AUTO_SLEEP_TIME => 0, -- DECIMAL
         ECC_MODE => "no_ecc", -- String
-        MEMORY_INIT_FILE => "rom2.mem", -- String
+        MEMORY_INIT_FILE => "rom1.mem", -- String
         MEMORY_INIT_PARAM => "0", -- String
         MEMORY_OPTIMIZATION => "false", -- String
         MEMORY_PRIMITIVE => "block", -- String
@@ -100,22 +98,22 @@ begin
         WAKEUP_TIME => "disable_sleep" -- String
     )
     port map (
-        douta => not_data(COLOR_DEPTH-1 downto 0), --upper
-        doutb => not_data(2*COLOR_DEPTH-1 downto COLOR_DEPTH), --lower
+        douta => data(COLOR_DEPTH-1 downto 0), --upper
+        doutb => data(2*COLOR_DEPTH-1 downto COLOR_DEPTH), --lower
         addra => addr_upper,
         addrb => addr_lower,
         clka => clk, --ref clock
         clkb => clk, --ref clock
-        ena => en,
-        enb => en,
+        ena => '1',
+        enb => '1',
         injectdbiterra => '0', -- 1-bit input: Do not change from the provided value.
         injectsbiterra => '0', -- 1-bit input: Do not change from the provided value.
         injectdbiterrb => '0', -- 1-bit input: Do not change from the provided value.
         injectsbiterrb => '0', -- 1-bit input: Do not change from the provided value.
         regcea => '1',
         regceb => '1',
-        rsta => rst,
-        rstb => rst,
+        rsta => '0',
+        rstb => '0',
         sleep => '0'
     );
     

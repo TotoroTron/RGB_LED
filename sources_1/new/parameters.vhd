@@ -2,8 +2,8 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 package parameters is
-    type table is array(63 downto 0) of integer;
-    type table255 is array(255 downto 0) of integer;
+    type table is array(0 to 63) of integer;
+    type table255 is array(0 to 255) of integer;
     signal gamma : table :=
     (
         0, 0, 0, 0, 0, 0, 0, 1,
