@@ -82,7 +82,7 @@ begin
         ADDR_WIDTH_B => 10, -- DECIMAL
         AUTO_SLEEP_TIME => 0, -- DECIMAL
         ECC_MODE => "no_ecc", -- String
-        MEMORY_INIT_FILE => "rom1.mem", -- String
+        MEMORY_INIT_FILE => "romTemp.mem", -- String
         MEMORY_INIT_PARAM => "0", -- String
         MEMORY_OPTIMIZATION => "false", -- String
         MEMORY_PRIMITIVE => "block", -- String
