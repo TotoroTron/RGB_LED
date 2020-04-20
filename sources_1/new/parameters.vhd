@@ -39,5 +39,6 @@ package parameters is
     constant IMG_WIDTH : integer := 32;
     constant IMG_HEIGHT : integer := 32;
     constant COLOR_DEPTH : integer := 24;
+    constant NUM_FRAMES : integer := 28;
 
 end package;

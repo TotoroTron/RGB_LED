@@ -11,7 +11,6 @@ entity led_control is
         di1 : in std_logic_vector(COLOR_DEPTH-1 downto 0); --upper
         di2 : in std_logic_vector(COLOR_DEPTH-1 downto 0); --lower
         
-        frame_req : out std_logic;
         img_col : out std_logic_vector(4 downto 0);
         img_row : out std_logic_vector(3 downto 0);
         
@@ -21,7 +20,8 @@ entity led_control is
         oe : out std_logic;
         clk_out : out std_logic; --clock to LED display
         
-        addr : out std_logic_vector(8 downto 0)
+        led_addr : out std_logic_vector(8 downto 0);
+        frame_addr : out std_logic_vector(6 downto 0)
     );
 end entity;
 
@@ -34,10 +34,12 @@ architecture behavioral of led_control is
     
     signal next_rgb1, next_rgb2 : std_logic_vector(2 downto 0);
     signal duty, next_duty : integer range 0 to 2**(COLOR_DEPTH/3)-1;
-    signal rep_count, next_rep_count : integer range 0 to 20; --frame repeat
-    constant frame_reps : integer := 0;
     
     signal led_count, next_led_count : integer range 0 to 511;
+    signal frame_count, next_frame_count : integer range 0 to NUM_FRAMES-1 :=0;
+    signal rep_count, next_rep_count : integer range 0 to 511; --frame repeat
+    constant frame_reps : integer := 3;
+    
 begin
 
     rgb1 <= s_rgb1; rgb2 <= s_rgb2;
@@ -50,10 +52,11 @@ begin
         if(reset = '1') then
             state <= INIT;
             col <= 0;
-            sect <= 0;
+            sect <= 15;
             duty <= 0;
             rep_count <= 0;
             led_count <= 0;
+            frame_count <= 0;
         elsif(running = true) then
             state <= next_state;
             s_rgb1 <= next_rgb1;
@@ -64,7 +67,9 @@ begin
             duty <= next_duty;
             rep_count <= next_rep_count;
             led_count <= next_led_count;
-            addr <= std_logic_vector(to_unsigned(next_led_count, 9));
+            led_addr <= std_logic_vector(to_unsigned(next_led_count, 9));
+            frame_count <= next_frame_count;
+            frame_addr <= std_logic_vector(to_unsigned(next_frame_count, 7));
         end if;
     end if;
 end process;
@@ -75,15 +80,15 @@ STATE_MACHINE : process(state, col ,sect, duty, di1, di2, rep_count, led_count)
     variable r_count2, g_count2, b_count2 : integer range 2**(COLOR_DEPTH/3)-1 downto 0;
 begin
     --DEFAULT SIGNAL ASSIGNMENTS
-    frame_req <= '0';
     next_rgb1 <= s_rgb1;
     next_rgb2 <= s_rgb2;
     next_state <= state;
     next_col <= col;
     next_sect <= sect;
     next_duty <= duty;
-    next_rep_count <= rep_count;
     next_led_count <= led_count;
+    next_rep_count <= rep_count;
+    next_frame_count <= frame_count;
     v_rgb1 := "000"; v_rgb2 := "000"; clk_out <= '0'; lat <= '0'; oe <= '1';
     
     r_count1 := to_integer( unsigned( di1(  COLOR_DEPTH-1 downto 2*COLOR_DEPTH/3) )); --bits 23 downto 16
@@ -105,45 +110,50 @@ begin
         if(duty < gamma255(g_count2) ) then v_rgb2(1) := '1'; end if;
         if(duty < gamma255(b_count2) ) then v_rgb2(0) := '1'; end if;        
         next_state <= NEXT_COLUMN;
-        
     when NEXT_COLUMN =>
-        oe <= '0';  clk_out <= '1';
-        if led_count < 511 then
+        oe <= '0'; 
+        clk_out <= '1';
+        if (led_count < 511) then
             next_led_count <= led_count + 1;
-        else
+        else 
             next_led_count <= 0;
         end if;        
         if(col < IMG_WIDTH-1) then
             next_col <= col + 1;
             next_state <= GET_DATA;
         else
-            next_col <= 0;
+            
             next_state <= LATCH_INCR_SECTION;
         end if;
     when LATCH_INCR_SECTION =>
+        next_col <= 0;
         lat <= '1';
         if(sect < 15) then
             next_sect <= sect + 1;
             next_state <= GET_DATA;
         else
-            next_sect <= 0;
+            
             next_state <= INCR_DUTY_FRAME;
         end if;
     when INCR_DUTY_FRAME =>
+        next_sect <= 0;
         if(duty < 2**(COLOR_DEPTH/3)-1) then
             next_duty <= duty + 1;
         else
             next_duty <= 0;
-            if(rep_count < frame_reps) then    --display the color frame_reps times before displaying next color
+            if(rep_count < frame_reps) then    --display the frame 'frame_rep' times before displaying the next frame
                 next_rep_count <= rep_count + 1;
             else
-                frame_req <= '1'; --request the next frame
+                if(frame_count < NUM_FRAMES-1) then
+                    next_frame_count <= frame_count+1;
+                else
+                    next_frame_count <= 0;
+                end if;
                 next_rep_count <= 0;
             end if;
         end if;
         next_state <= GET_DATA;
     end case;
-    
     next_rgb1 <= v_rgb1;
     next_rgb2 <= v_rgb2;
 end process;
