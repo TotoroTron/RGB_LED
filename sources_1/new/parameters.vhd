@@ -39,6 +39,7 @@ package parameters is
     constant IMG_WIDTH : integer := 32;
     constant IMG_HEIGHT : integer := 32;
     constant COLOR_DEPTH : integer := 24;
-    constant NUM_FRAMES : integer := 28;
+    constant NUM_FRAMES : integer := 29;
+    constant IMG_FILE : string := "rainbow2.mem";
 
 end package;

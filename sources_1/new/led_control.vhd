@@ -38,7 +38,7 @@ architecture behavioral of led_control is
     signal led_count, next_led_count : integer range 0 to 511;
     signal frame_count, next_frame_count : integer range 0 to NUM_FRAMES-1 :=0;
     signal rep_count, next_rep_count : integer range 0 to 511; --frame repeat
-    constant frame_reps : integer := 3;
+    constant frame_reps : integer := 2;
     
 begin
 

@@ -31,7 +31,6 @@ architecture Behavioral of top_level is
     signal addr_lower : std_logic_vector(16 downto 0);
     
     signal clk2 : std_logic;
-    signal clk3 : std_logic;
     signal s_rgb1, s_rgb2 : std_logic_vector(2 downto 0);
     signal s_col : std_logic_vector(4 downto 0); --0 to 31
     signal s_row : std_logic_vector(3 downto 0); --0 to 15
@@ -74,7 +73,7 @@ begin
         ADDR_WIDTH_B => 17, -- DECIMAL
         AUTO_SLEEP_TIME => 0, -- DECIMAL
         ECC_MODE => "no_ecc", -- String
-        MEMORY_INIT_FILE => "rom1.mem", -- String
+        MEMORY_INIT_FILE => IMG_FILE, -- String
         MEMORY_INIT_PARAM => "0", -- String
         MEMORY_OPTIMIZATION => "false", -- String
         MEMORY_PRIMITIVE => "block", -- String
