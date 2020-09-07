@@ -26,8 +26,8 @@ end top_level;
 architecture Behavioral of top_level is
     signal data : std_logic_vector(2*COLOR_DEPTH-1 downto 0); --MSB: lower half, LSB: upper half
     signal led_addr : std_logic_vector(8 downto 0); --512 locations
-    signal frame_addr : std_logic_vector(6 downto 0); --28 frame animation 
-    signal addr_upper : std_logic_vector(16 downto 0); --5 frame bits + 1bit + 9 led bits
+    signal frame_addr : std_logic_vector(6 downto 0);
+    signal addr_upper : std_logic_vector(16 downto 0);
     signal addr_lower : std_logic_vector(16 downto 0);
     
     signal clk2 : std_logic;

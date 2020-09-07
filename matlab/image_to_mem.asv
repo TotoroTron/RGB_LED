@@ -9,7 +9,7 @@ for n=1:23
     for i = 1:32
         for j = 1:32
             X = ['@', dec2hex(1024*(n-1)+32*(i-1)+(j-1),8), ' ', dec2hex(A(i, j, 1),2), '', dec2hex(A(i,j,2),2), '', dec2hex(A(i,j,3),2)];
-            %.mem output format: @AAAAAAAA DDDDDD
+            %.mem output format: @AA DATAAA
             fprintf(fileID, '%s\n', X);
         end
     end
