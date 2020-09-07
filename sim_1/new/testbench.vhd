@@ -40,12 +40,13 @@ architecture Behavioral of testbench is
     signal rgb1_tb, rgb2_tb : std_logic_vector(2 downto 0);
     signal sel_tb : std_logic_vector(3 downto 0);
     signal lat_tb, oe_tb, clk_out_tb : std_logic;
-    signal start_tb, reset_tb : std_logic;
+    signal start_tb, reset_tb, disp_en_tb : std_logic;
     constant clk_period : time := 10ns;
 begin
-    UUT : entity work.led_control
+    UUT : entity work.top_level
+    generic map(clk_delay => 1)
     port map(
-        clk_in => clk_tb,
+        clk => clk_tb,
         rgb1 => rgb1_tb,
         rgb2 => rgb2_tb,
         sel => sel_tb,
@@ -53,11 +54,13 @@ begin
         oe => oe_tb,
         clk_out => clk_out_tb,
         start => start_tb,
-        reset => reset_tb
+        reset => reset_tb,
+        disp_en => disp_en_tb
     );
     
     CLOCK_GEN : process
     begin
+        disp_en_tb <= '1';
         start_tb <= '1';
         reset_tb <= '0';
         clk_tb <= '1';
