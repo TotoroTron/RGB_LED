@@ -21,7 +21,7 @@ entity led_control is
         clk_out : out std_logic; --clock to LED display
         
         led_addr : out std_logic_vector(8 downto 0);
-        frame_addr : out std_logic_vector(6 downto 0)
+        frame_addr : out std_logic_vector(7 downto 0)
     );
 end entity;
 
@@ -37,8 +37,8 @@ architecture behavioral of led_control is
     
     signal led_count, next_led_count : integer range 0 to 511;
     signal frame_count, next_frame_count : integer range 0 to NUM_FRAMES-1 :=0;
-    signal rep_count, next_rep_count : integer range 0 to 511; --frame repeat
-    constant frame_reps : integer := 2;
+    signal rep_count, next_rep_count : integer range 0 to 511;
+    constant frame_reps : integer := 3; --display each image this many times before displaying the next image
     
 begin
 
@@ -69,7 +69,7 @@ begin
             led_count <= next_led_count;
             led_addr <= std_logic_vector(to_unsigned(next_led_count, 9));
             frame_count <= next_frame_count;
-            frame_addr <= std_logic_vector(to_unsigned(next_frame_count, 7));
+            frame_addr <= std_logic_vector(to_unsigned(next_frame_count, 8));
         end if;
     end if;
 end process;

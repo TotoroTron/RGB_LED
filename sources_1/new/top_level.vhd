@@ -26,9 +26,9 @@ end top_level;
 architecture Behavioral of top_level is
     signal data : std_logic_vector(2*COLOR_DEPTH-1 downto 0); --MSB: lower half, LSB: upper half
     signal led_addr : std_logic_vector(8 downto 0); --512 locations
-    signal frame_addr : std_logic_vector(6 downto 0);
-    signal addr_upper : std_logic_vector(16 downto 0);
-    signal addr_lower : std_logic_vector(16 downto 0);
+    signal frame_addr : std_logic_vector(7 downto 0);
+    signal addr_upper : std_logic_vector(17 downto 0);
+    signal addr_lower : std_logic_vector(17 downto 0);
     
     signal clk2 : std_logic;
     signal s_rgb1, s_rgb2 : std_logic_vector(2 downto 0);
@@ -69,8 +69,8 @@ begin
     
     xpm_memory_dprom_inst : xpm_memory_dprom
     generic map (
-        ADDR_WIDTH_A => 17, -- DECIMAL
-        ADDR_WIDTH_B => 17, -- DECIMAL
+        ADDR_WIDTH_A => 18, -- DECIMAL
+        ADDR_WIDTH_B => 18, -- DECIMAL
         AUTO_SLEEP_TIME => 0, -- DECIMAL
         ECC_MODE => "no_ecc", -- String
         MEMORY_INIT_FILE => IMG_FILE, -- String
